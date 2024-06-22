@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <script src="https://unpkg.com/rxjs@7.8.1/dist/bundles/rxjs.umd.min.js"></script>
     <title>JavaScript Array Methods Explorer</title>
     <style>
          body {
@@ -94,6 +95,20 @@
         .code-editor .number { color: #b5cea8; }
         .code-editor .function { color: #dcdcaa; }
         .code-editor .comment { color: #6a9955; }
+             .rxjs-example {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .rxjs-example h3 {
+            margin-top: 0;
+        }
+
+        .rxjs-example button {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -103,6 +118,7 @@
         <div class="tab">
             <button class="tablinks" onclick="openTab(event, 'SingleMethods')">Single Methods</button>
             <button class="tablinks" onclick="openTab(event, 'Chaining')">Method Chaining</button>
+              <button class="tablinks" onclick="openTab(event, 'RxJSOperators')">RxJS Operators</button>
         </div>
 
         <div id="SingleMethods" class="tabcontent">
@@ -142,7 +158,45 @@
             <div id="chainingResult"></div>
         </div>
     </div>
+   <div id="RxJSOperators" class="tabcontent">
+            <h2>RxJS Operators</h2>
+            <p>RxJS provides a wide range of operators for working with Observables. Here are some examples:</p>
 
+            <div class="rxjs-example">
+                <h3>map and filter</h3>
+                <p>This example demonstrates the use of map and filter operators.</p>
+                <div id="mapFilterResult"></div>
+                <button onclick="runMapFilterExample()">Run Example</button>
+            </div>
+
+            <div class="rxjs-example">
+                <h3>mergeMap (flatMap)</h3>
+                <p>This example shows how to use mergeMap to flatten nested Observables.</p>
+                <div id="mergeMapResult"></div>
+                <button onclick="runMergeMapExample()">Run Example</button>
+            </div>
+
+            <div class="rxjs-example">
+                <h3>switchMap</h3>
+                <p>This example demonstrates how switchMap cancels previous inner Observables.</p>
+                <div id="switchMapResult"></div>
+                <button onclick="runSwitchMapExample()">Run Example</button>
+            </div>
+
+            <div class="rxjs-example">
+                <h3>debounceTime and distinctUntilChanged</h3>
+                <p>This example shows how to use debounceTime and distinctUntilChanged for input handling.</p>
+                <input type="text" id="searchInput" placeholder="Type to search...">
+                <div id="debounceResult"></div>
+            </div>
+
+            <div class="rxjs-example">
+                <h3>combineLatest</h3>
+                <p>This example demonstrates how to combine the latest values from multiple Observables.</p>
+                <div id="combineLatestResult"></div>
+                <button onclick="runCombineLatestExample()">Run Example</button>
+            </div>
+        </div>
     <script src="callbackFunctions.js"></script>
     <script>
       const methodSelect = document.getElementById('methodSelect');
@@ -329,6 +383,83 @@
                 .replace(/(\/\/.*)/g, '<span class="comment">$1</span>');
         }
 
+          // RxJS Operators Examples
+        const { of, from, interval, fromEvent } = rxjs;
+        const { map, filter, mergeMap, switchMap, debounceTime, distinctUntilChanged, take, combineLatest } = rxjs.operators;
+
+        function runMapFilterExample() {
+            const source$ = from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+            const result$ = source$.pipe(
+                filter(x => x % 2 === 0),
+                map(x => x * x)
+            );
+
+            result$.subscribe(
+                value => document.getElementById('mapFilterResult').innerHTML += `Result: ${value}<br>`,
+                error => console.error(error),
+                () => document.getElementById('mapFilterResult').innerHTML += 'Completed'
+            );
+        }
+
+        function runMergeMapExample() {
+            const source$ = of('Hello', 'World');
+            const result$ = source$.pipe(
+                mergeMap(x => of(1, 2).pipe(map(y => `${x} ${y}`)))
+            );
+
+            result$.subscribe(
+                value => document.getElementById('mergeMapResult').innerHTML += `Result: ${value}<br>`,
+                error => console.error(error),
+                () => document.getElementById('mergeMapResult').innerHTML += 'Completed'
+            );
+        }
+
+        function runSwitchMapExample() {
+            const source$ = interval(1000).pipe(take(3));
+            const result$ = source$.pipe(
+                switchMap(x => interval(500).pipe(
+                    map(y => `Source: ${x}, Inner: ${y}`),
+                    take(3)
+                ))
+            );
+
+            result$.subscribe(
+                value => document.getElementById('switchMapResult').innerHTML += `${value}<br>`,
+                error => console.error(error),
+                () => document.getElementById('switchMapResult').innerHTML += 'Completed'
+            );
+        }
+
+        function setupDebounceExample() {
+            const input$ = fromEvent(document.getElementById('searchInput'), 'input');
+            const result$ = input$.pipe(
+                map(event => event.target.value),
+                debounceTime(300),
+                distinctUntilChanged()
+            );
+
+            result$.subscribe(
+                value => document.getElementById('debounceResult').innerHTML = `Searching for: ${value}`,
+                error => console.error(error)
+            );
+        }
+
+        function runCombineLatestExample() {
+            const source1$ = interval(1000).pipe(map(x => `First: ${x}`), take(3));
+            const source2$ = interval(1500).pipe(map(x => `Second: ${x}`), take(3));
+
+            const result$ = combineLatest([source1$, source2$]);
+
+            result$.subscribe(
+                value => document.getElementById('combineLatestResult').innerHTML += `${JSON.stringify(value)}<br>`,
+                error => console.error(error),
+                () => document.getElementById('combineLatestResult').innerHTML += 'Completed'
+            );
+        }
+
+        // Initialize RxJS examples
+        setupDebounceExample();
+        
         // Open the Single Methods tab by default
         document.getElementsByClassName("tablinks")[0].click();
     </script>
