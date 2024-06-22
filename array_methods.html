@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Array Methods Explorer</title>
+    <style>
+         body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        select, input, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #result {
+            background: #e9e9e9;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+        }
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+        }
+        .tab button:hover {
+            background-color: #ddd;
+        }
+        .tab button.active {
+            background-color: #ccc;
+        }
+        .tabcontent {
+            display: none;
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+        
+        .code-editor {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .code-editor .line-numbers {
+            display: inline-block;
+            padding-right: 10px;
+            border-right: 1px solid #4e4e4e;
+            text-align: right;
+            color: #858585;
+        }
+
+        .code-editor .code-content {
+            display: inline-block;
+            padding-left: 10px;
+        }
+
+        .code-editor .keyword { color: #569cd6; }
+        .code-editor .string { color: #ce9178; }
+        .code-editor .number { color: #b5cea8; }
+        .code-editor .function { color: #dcdcaa; }
+        .code-editor .comment { color: #6a9955; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JavaScript Array Methods Explorer</h1>
+        
+        <div class="tab">
+            <button class="tablinks" onclick="openTab(event, 'SingleMethods')">Single Methods</button>
+            <button class="tablinks" onclick="openTab(event, 'Chaining')">Method Chaining</button>
+        </div>
+
+        <div id="SingleMethods" class="tabcontent">
+            <select id="methodSelect">
+                <option value="">Select a method</option>
+                <option value="map">map()</option>
+                <option value="filter">filter()</option>
+                <option value="reduce">reduce()</option>
+                <option value="forEach">forEach()</option>
+                <option value="find">find()</option>
+                <option value="some">some()</option>
+                <option value="every">every()</option>
+            </select>
+            <input type="text" id="arrayInput" placeholder="Enter array (e.g., 1,2,3,4,5)">
+            <select id="mapCallbacks" class="callbackSelect hidden"></select>
+            <select id="filterCallbacks" class="callbackSelect hidden"></select>
+            <select id="reduceCallbacks" class="callbackSelect hidden"></select>
+            <select id="forEachCallbacks" class="callbackSelect hidden"></select>
+            <select id="findCallbacks" class="callbackSelect hidden"></select>
+            <select id="someCallbacks" class="callbackSelect hidden"></select>
+            <select id="everyCallbacks" class="callbackSelect hidden"></select>
+            <input type="text" id="callbackInput" placeholder="Or enter custom callback function">
+            <button onclick="executeMethod()">Execute</button>
+            <div id="result"></div>
+        </div>
+
+        <div id="Chaining" class="tabcontent">
+            <h2>Method Chaining Examples</h2>
+            <p>Method chaining allows you to perform multiple operations on an array in a single statement. Each method in the chain operates on the result of the previous method.</p>
+            <select id="chainingSelect">
+                <option value="">Select a chaining example</option>
+            </select>
+            <input type="text" id="chainingArrayInput" placeholder="Enter array (e.g., 1,2,3,4,5)">
+            <button onclick="executeChaining()">Execute</button>
+            <div id="chainingDescription"></div>
+            <div id="chainingCode" class="code-editor"></div>
+            <div id="chainingResult"></div>
+        </div>
+    </div>
+
+    <script src="callbackFunctions.js"></script>
+    <script>
+      const methodSelect = document.getElementById('methodSelect');
+        const callbackInput = document.getElementById('callbackInput');
+        const callbackSelects = document.querySelectorAll('.callbackSelect');
+
+        // Populate callback dropdowns
+        Object.keys(callbackFunctions).forEach(method => {
+            const select = document.getElementById(`${method}Callbacks`);
+            select.innerHTML = '<option value="">Select a callback function</option>';
+            callbackFunctions[method].forEach(cb => {
+                const option = document.createElement('option');
+                option.value = cb.func;
+                option.textContent = cb.name;
+                select.appendChild(option);
+            });
+        });
+
+        // Show/hide appropriate callback dropdown when method is selected
+        methodSelect.addEventListener('change', function() {
+            callbackSelects.forEach(select => select.classList.add('hidden'));
+            const selectedMethod = this.value;
+            if (selectedMethod) {
+                document.getElementById(`${selectedMethod}Callbacks`).classList.remove('hidden');
+            }
+        });
+
+        // Update callbackInput when a pre-defined function is selected
+        callbackSelects.forEach(select => {
+            select.addEventListener('change', function() {
+                callbackInput.value = this.value;
+            });
+        });
+
+        function executeMethod() {
+            const method = methodSelect.value;
+            const arrayInput = document.getElementById('arrayInput').value;
+            const callbackInputValue = callbackInput.value;
+            const resultDiv = document.getElementById('result');
+
+            if (!method || !arrayInput) {
+                resultDiv.innerHTML = 'Please select a method and enter an array.';
+                return;
+            }
+
+            let arr;
+            try {
+                arr = JSON.parse('[' + arrayInput + ']');
+            } catch (e) {
+                resultDiv.innerHTML = 'Invalid array input. Please enter comma-separated values.';
+                return;
+            }
+
+            let callback;
+            try {
+                callback = eval('(' + callbackInputValue + ')');
+            } catch (e) {
+                resultDiv.innerHTML = 'Invalid callback function.';
+                return;
+            }
+
+            let result;
+            switch (method) {
+                case 'map':
+                    result = arr.map(callback);
+                    break;
+                case 'filter':
+                    result = arr.filter(callback);
+                    break;
+                case 'reduce':
+                    const initVal = callbackFunctions.reduce.find(cb => cb.func === callbackInputValue)?.initVal;
+                    result = initVal ? arr.reduce(callback, JSON.parse(initVal)) : arr.reduce(callback);
+                    break;
+                case 'forEach':
+                    let forEachResult = [];
+                    arr.forEach(x => forEachResult.push(callback(x)));
+                    result = 'forEach() does not return a value. Check the console for logged output.';
+                    break;
+                case 'find':
+                    result = arr.find(callback);
+                    break;
+                case 'some':
+                    result = arr.some(callback);
+                    break;
+                case 'every':
+                    result = arr.every(callback);
+                    break;
+            }
+
+            resultDiv.innerHTML = `
+                <strong>Original Array:</strong> [${arr}]<br>
+                <strong>Method:</strong> ${method}()<br>
+                <strong>Callback:</strong> ${callbackInputValue}<br>
+                <strong>Result:</strong> ${JSON.stringify(result)}
+            `;
+        }
+        // Populate chaining examples dropdown
+        const chainingSelect = document.getElementById('chainingSelect');
+        chainingExamples.forEach((example, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = example.name;
+            chainingSelect.appendChild(option);
+        });
+
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        function executeChaining() {
+            const exampleIndex = chainingSelect.value;
+            const arrayInput = document.getElementById('chainingArrayInput').value;
+            const descriptionDiv = document.getElementById('chainingDescription');
+            const codeDiv = document.getElementById('chainingCode');
+            const resultDiv = document.getElementById('chainingResult');
+
+            if (!exampleIndex || !arrayInput) {
+                resultDiv.innerHTML = 'Please select an example and enter an array.';
+                return;
+            }
+
+            let arr;
+            try {
+                arr = JSON.parse('[' + arrayInput + ']');
+            } catch (e) {
+                resultDiv.innerHTML = 'Invalid array input. Please enter comma-separated values.';
+                return;
+            }
+
+            const example = chainingExamples[exampleIndex];
+            descriptionDiv.innerHTML = `<strong>Description:</strong> ${example.description}`;
+
+            // Format and display the code
+            const formattedCode = formatCode(example.code);
+            codeDiv.innerHTML = formattedCode;
+
+            let result;
+            try {
+                result = eval(example.code);
+            } catch (e) {
+                resultDiv.innerHTML = 'Error executing the chaining example: ' + e.message;
+                return;
+            }
+
+            resultDiv.innerHTML = `
+                <strong>Original Array:</strong> [${arr}]<br>
+                <strong>Result:</strong> ${JSON.stringify(result, null, 2)}
+            `;
+        }
+
+        function formatCode(code) {
+            const lines = code.split('\n');
+            let formattedCode = '<div class="line-numbers">';
+            let codeContent = '<div class="code-content">';
+
+            lines.forEach((line, index) => {
+                formattedCode += `${index + 1}<br>`;
+                codeContent += highlightSyntax(line) + '<br>';
+            });
+
+            formattedCode += '</div>';
+            codeContent += '</div>';
+
+            return formattedCode + codeContent;
+        }
+
+        function highlightSyntax(line) {
+            // This is a simple syntax highlighter. For a more robust solution, consider using a library like Prism.js
+            return line
+                .replace(/\b(const|let|var|function|return|if|else|for|while)\b/g, '<span class="keyword">$1</span>')
+                .replace(/(["'])(.*?)\1/g, '<span class="string">$1$2$1</span>')
+                .replace(/\b(\d+)\b/g, '<span class="number">$1</span>')
+                .replace(/\b([a-zA-Z]+)(?=\()/g, '<span class="function">$1</span>')
+                .replace(/(\/\/.*)/g, '<span class="comment">$1</span>');
+        }
+
+        // Open the Single Methods tab by default
+        document.getElementsByClassName("tablinks")[0].click();
+    </script>
+</body>
+</html>
